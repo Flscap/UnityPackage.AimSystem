@@ -1,0 +1,7 @@
+{
+	"name": "FixedRangeDirectionalAimMode",
+	"references": [
+    	"Flscap.AimSystem",
+    	"Unity.InputSystem"
+  	]
+}

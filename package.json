@@ -6,5 +6,12 @@
   "description": "A modular, extensible aiming interaction system.",
   "author": {
     "name": "Flscap"
-  }
+  },
+  "samples": [
+	{
+      "displayName": "Fixed-range directional aim mode",
+      "description": "Example of a fixed-range directional aim mode with a line visualizer.",
+      "path": "Samples~/FixedRangeDirectionalAimMode"
+    }
+  ]
 }
