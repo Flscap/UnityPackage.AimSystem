@@ -2,22 +2,22 @@ using Flscap.AimSystem;
 using UnityEngine;
 
 public sealed class DirectionLineAimVisualizer
-    : AimVisualizer<IAimMode<DirectionalAimState>>
+    : AimVisualizer<IAimMode<DirectionalAimData>>
 {
     [SerializeField] private LineRenderer _lineRenderer;
 
     private void Update()
     {
-        var state = AimMode.State;
+        var data = AimMode.Data;
 
-        if (state.Origin.HasValue &&
-            state.Direction.HasValue &&
-            state.Range.HasValue)
+        if (data.Origin.HasValue &&
+            data.Direction.HasValue &&
+            data.Range.HasValue)
         {
             _lineRenderer.enabled = true;
 
-            Vector3 start = state.Origin.Value;
-            Vector3 end = start + state.Direction.Value.normalized * state.Range.Value;
+            Vector3 start = data.Origin.Value;
+            Vector3 end = start + data.Direction.Value.normalized * data.Range.Value;
 
             _lineRenderer.SetPosition(0, start);
             _lineRenderer.SetPosition(1, end);

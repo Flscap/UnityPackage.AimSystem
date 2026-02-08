@@ -6,8 +6,8 @@ namespace Flscap.AimSystem
         bool TryProjectIntent(out object aimData);
     }
 
-    public interface IAimMode<TState> : IAimMode
+    public interface IAimMode<TAimData> : IAimMode
     {
-        TState State { get; }
+        TAimData Data { get; }
     }
 }

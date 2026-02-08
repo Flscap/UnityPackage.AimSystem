@@ -40,7 +40,7 @@ namespace Flscap.TopDown.Base
                 range: 10f
             );
 
-            _currentAimRequest = new AimRequest<AbilityContext, DirectionalAimResult>(
+            _currentAimRequest = new AimRequest<AbilityContext, DirectionalAimData>(
                 new AbilityContext
                 {
                     Name = "Test ability"

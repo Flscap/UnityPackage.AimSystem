@@ -5,12 +5,12 @@ A modular, extensible aiming **interaction system** for Unity.
 This package provides a small orchestration layer for handling aiming as a **modal interaction**:
 
 - Start aiming  
-- Update live state  
-- Optionally visualize  
+- Update live data  
+- Optionally visualize
 - Commit intent  
 
-The system is deliberately **unopinionated** about gameplay, data shapes, and abilities.  
-All meaning is owned by the consumer.
+The system is deliberately **unopinionated** about gameplay, abilities, and data meaning.  
+All semantics are owned by the consumer.
 
 ---
 
@@ -20,17 +20,17 @@ All meaning is owned by the consumer.
 
 `AimSystem` is the orchestrator.
 
-It coordinates the lifecycle of an aiming interaction, but does **not** interpret or process aim data.
+It coordinates the lifecycle of an aiming interaction, but does **not** interpret or validate aim data.
 
 **Responsibilities:**
 - Manage the active aim mode
 - Update it every frame
 - Spawn and clean up an optional visualizer
-- Commit the result when requested
+- Commit the aim when requested
 
 **It does not:**
 - Know what aiming means
-- Know what data is produced
+- Know what the data represents
 - Route abilities
 - Broadcast global events
 
@@ -41,20 +41,22 @@ It coordinates the lifecycle of an aiming interaction, but does **not** interpre
 An `AimRequest` represents **why** the player is aiming and **what should happen** when the aim is committed.
 
 ```csharp
-var request = new AimRequest<AbilityContext, DirectionalAimResult>(
+var request = new AimRequest<AbilityContext, DirectionalAimData>(
+    new AbilityContext { Name = "Fireball" },
     (context, result) =>
     {
         FireAbility(context, result);
-    },
-    new AbilityContext { Name = "Fireball" }
+    }
 );
 ```
 
 **Key properties:**
 - Fully type-safe at the call site
 - No casting required in gameplay code
-- Supports optional contextual data
+- Carries optional contextual data
 - Encapsulates the continuation (`onCommitted` callback)
+
+Runtime validation ensures that mismatched aim data types fail **loudly and explicitly**.
 
 ---
 
@@ -71,18 +73,35 @@ public interface IAimMode
 ```
 
 - Aim modes are user-defined
-- They may maintain any internal state
-- They produce a result only when committed
-- The result type is fully owned by the user
+- They maintain and update aim data over time
+- They decide when the data is valid
+- They return the *same data object* on commit
 
-For visualization, a typed extension is available:
+For visualization and inspection, a typed extension is available:
 
 ```csharp
-public interface IAimMode<TState> : IAimMode
+public interface IAimMode<TAimData> : IAimMode
 {
-    TState State { get; }
+    TAimData Data { get; }
 }
 ```
+
+---
+
+### Aim Data Model
+
+This system intentionally uses **a single data type** for both:
+- live, mutable aiming data
+- final, committed aim data
+
+The distinction is **temporal**, not structural.
+
+- During aiming: the data is mutable and incomplete
+- On commit: the data is treated as final and valid
+
+This avoids artificial type splits, runtime casts, and pairing errors while keeping the API honest and simple.
+
+Immutability after commit is a **documented convention**, not a forced constraint.
 
 ---
 
@@ -100,19 +119,23 @@ Example:
 
 ```csharp
 public sealed class DirectionLineAimVisualizer
-    : AimVisualizer<IAimMode<DirectionalAimState>>
+    : AimVisualizer<IAimMode<DirectionalAimData>>
 {
-    // draw preview using typed state
+    // draw preview using aim data
 }
 ```
 
-Visualizers are **not** generic infrastructure and are expected to be specific.
+Visualizers are expected to be specific and are not part of the generic infrastructure.
 
 ---
 
 ## Example Flow
 
 ```csharp
+// Create providers
+var originProvider = new TopDownTransformOriginProvider(transform);
+var directionProvider = new TopDownMouseDirectionProvider(Camera);
+
 // Create aim mode
 var aimMode = new FixedRangeDirectionalAimMode(
     originProvider,
@@ -121,12 +144,17 @@ var aimMode = new FixedRangeDirectionalAimMode(
 );
 
 // Create request
-var request = new AimRequest<DirectionalAimResult, AbilityContext>(
+var request = new AimRequest<AbilityContext, DirectionalAimData>(
+    new AbilityContext { Name = "Test Ability" },
     (context, result) =>
     {
-        Debug.Log($"Ability: {context.Name}, Range: {result.Range}");
-    },
-    new AbilityContext { Name = "Test Ability" }
+        Debug.Log(
+            $"Ability: {context.Name}, " +
+            $"Origin: {result.Origin}, " +
+            $"Direction: {result.Direction}, " +
+            $"Range: {result.Range}"
+        );
+    }
 );
 
 // Start aiming
@@ -148,10 +176,10 @@ aimSystem.TryCommitAim(request);
   Aiming is a modal interaction, not a broadcast signal.
 
 - **Type safety at the edges**  
-  Strong typing where code is written; type erasure only at orchestration boundaries.
+  Strong typing where gameplay code is written; type erasure only at orchestration boundaries.
 
 - **User-owned data**  
-  No framework-defined aim data or state classes.
+  No framework-defined aim data or result classes.
 
 - **Minimal assumptions**  
   No required origin, direction, target, or range.
@@ -200,4 +228,4 @@ Packages/
 > **AimSystem coordinates *when* and *how long*.  
 > You decide *what it means*.**
 
-If you enjoy building systems and clean APIs, this package is for you.
+If you enjoy building systems, clean APIs, and composable interactions, this package is for you.

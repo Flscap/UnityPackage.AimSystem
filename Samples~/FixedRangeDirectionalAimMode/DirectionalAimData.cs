@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class DirectionalAimState
+public class DirectionalAimData
 {
     public Vector3? Origin;
     public Vector3? Direction;

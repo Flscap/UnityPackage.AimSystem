@@ -1,13 +1,13 @@
 using Flscap.AimSystem;
 
 public sealed class FixedRangeDirectionalAimMode
-    : IAimMode<DirectionalAimState>
+    : IAimMode<DirectionalAimData>
 {
     private readonly IOriginProvider _originProvider;
     private readonly IDirectionProvider _directionProvider;
     private readonly float _range;
 
-    private readonly DirectionalAimState _state = new();
+    private readonly DirectionalAimData _data = new();
 
     public FixedRangeDirectionalAimMode(
         IOriginProvider originProvider,
@@ -19,29 +19,25 @@ public sealed class FixedRangeDirectionalAimMode
         _range = range;
     }
 
-    public DirectionalAimState State => _state;
+    public DirectionalAimData Data => _data;
 
     public void UpdateState(float deltaTime)
     {
-        _state.Origin = _originProvider.GetOrigin();
-        _state.Direction = _directionProvider.GetDirection(_state.Origin);
-        _state.Range = _range;
+        _data.Origin = _originProvider.GetOrigin();
+        _data.Direction = _directionProvider.GetDirection(_data.Origin);
+        _data.Range = _range;
     }
 
     public bool TryProjectIntent(out object aimData)
     {
-        aimData = null;
-
-        if (_state.Origin == null || _state.Direction == null || _state.Range == null)
-            return false;
-
-        aimData = new DirectionalAimResult
+        if (_data.Origin == null || _data.Direction == null || _data.Range == null)
         {
-            Origin = _state.Origin.Value,
-            Direction = _state.Direction.Value.normalized,
-            Range = _state.Range.Value
-        };
+            aimData = null;
+            return false;
+        }
 
+        // No transformation. This is the result.
+        aimData = _data;
         return true;
     }
 }
